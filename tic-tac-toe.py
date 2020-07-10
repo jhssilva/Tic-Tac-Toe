@@ -17,17 +17,50 @@ if not pygame.mixer:
     print('Warning, sound disabled')
 
 class Game():
-
-    run = True
+    __run = True
+    __board = [[None, None, None],
+             [None, None, None],
+             [None, None, None]]
+    
+    # Computer is the 'O' 
+    # Human is the 'X'
+    __variables = ["X","O"]
 
     def __init__(self):
         super().__init__()
+        self.__run = True
+        self.__board = [[None, None, None],
+                    [None, None, None],
+                    [None, None, None]]
+        
+    @property
+    def board(self):
+        return self.__board
+    
+    @board.setter
+    def board(self, board):
+        self.__board = board
+    
+    @property
+    def variables(self):
+        return self.__variables
     
     # Next turn that will be against computer
     
     # Check win
-    
+    def checkWin(self):
+        print("d")
+            
     # Check if movement it's available
+    def checkMovement(self, row, col):
+        status = False
+        if (row > 3 or row < 0 or col > 3 or col < 0):
+            status = False
+        else:
+            if(self.__board[row][col] == 0):
+                status = True
+
+        return status
     
     # Make the movement
     
@@ -35,60 +68,6 @@ class Game():
     @property
     def __del__(self):
         print("Finishing the game")
-
-class Rect():
-    __pos_x = 0
-    __pos_y = 0
-    __size_x = 0
-    __size_y = 0
-    __pygame_obj = None # Obj when it's printed on screen
-
-    def __init__(self, pos_x, pos_y, size_x, size_y, pygame_obj):
-        self.__pos_x = pos_x
-        self.__pos_y = pos_y
-        self.__size_x = size_x
-        self.__size_y = size_y
-        self.__pygame_obj = pygame_obj
-    
-    @property
-    def pos_x(self):
-        return self.__pos_x
-    
-    @pos_x.setter
-    def pos_x(self, pos_x):
-        self.__pos_x = pos_x
-        
-    @property
-    def pos_y(self):
-        return self.__pos_y
-    
-    @pos_y.setter
-    def pos_y(self, pos_y):
-        self.__pos_y = pos_y
-    
-    @property
-    def size_x(self):
-        return self.__size_x
-    
-    @size_x.setter
-    def size_x(self, size_x):
-        self.__size_x = size_x
-
-    @property
-    def size_y(self):
-        return self.__pos_x
-    
-    @size_y.setter
-    def size_y(self, size_y):
-        self.__size_y = size_y
-        
-    @property
-    def pygame_obj(self):
-        return __pygame_obj
-
-    @pygame_obj.setter
-    def pygame_obj(self, pygame_obj):
-        self.__pygame_obj = pygame_obj
         
 class Graphical():
     game = None # Variable that keeps the obj Game
@@ -96,62 +75,130 @@ class Graphical():
     gameDisplay = None  # Game Display
     run = True # Variable that keeps track if the game is running
     
-    # Colors
+    # Colors in RGB
     white = (255, 255, 255)
     red = (255, 0, 0)
     gainsboro = (220,220,220)
     dimgrey = (105,105,105)
+    black = (0, 0, 0)
     
     # Dimensions
     weight = 800
     height = 800
-    block_size = height / 3
-    size_x = weight / 3
-    size_y = height / 3
+    size_x = weight // 3
+    size_y = height // 3
 
     def __init__(self):
         super().__init__()
         print("Graphical Started")
         self.game = Game()
-        self.setScreen
+        self.initBoard
         self.start
         
     @property
-    def setScreen(self):
+    def initBoard(self):
+        # initializes the board
+        # --------------------------
+        #
+        
         pygame.init() # Needs to init the pygame
-        self.gameDisplay = pygame.display.set_mode((weight,height)) # Set the window size
+        self.gameDisplay = pygame.display.set_mode((self.weight,self.height)) # Set the window size
         pygame.display.set_caption("Tic-Tac-Toe") # Set title of the window
         self.gameDisplay.fill(self.gainsboro) # Fill the background with the color X
         pygame.mouse.set_visible(True) # Function to set the mouse visible
-        
-        for x in range(0, 3):
-            for y in range(0, 3):
-                size_x = self.size_x
-                size_y = self.size_y
-                pos_x = x * (size_x + 5)
-                pos_y = y * (size_y + 5)
-                         
-                rect = pygame.Rect(pos_x, pos_y, size_x, size_y)
-                self.array_rect.append(Rect(pos_x, pos_y, size_x, size_y, rect)) #Create object array
-                pygame.draw.rect(self.gameDisplay, dimgrey, rect)
-                pygame.display.update()  # To update the display
-    
+        self.drawBoard() #Initializes the board
+              
     @property
     def start(self):
         # Game Cicle
+        # ------------------------
+        #
+        
         while self.run:
             for event in pygame.event.get():  # Get Events
                 if event.type == pygame.QUIT:
-                    run = False
+                    self.run = False
                     break
                 if event.type == pygame.MOUSEBUTTONUP:
-                    pressed1, pressed2, pressed3 = pygame.mouse.get_pressed()
-                    mouse_pos = pygame.mouse.get_pos()
-                    if pressed1:
-                        print("OI")
-                   # if rect.collidepoint(mouse_pos) and pressed1:
-                       # print("Test")
-                    print("Position = ", mouse_pos)
+                    self.handlerMouse
+        
+    def drawCircle(self, row, col):
+        # Draw Circle on the game Board at position (row, col)
+        # ---------------------------------------------------
+        # row : Row on the board 
+        # col : Col on the board
+        # ---------------------------------------------------
+        # circle(surface, color, center, radius, width (optional)) -> Rect
+        surface = self.gameDisplay
+        color = self.black
+        center = ((self.size_x // 2) + (row * self.size_x), (self.size_y // 2) + (col * self.size_y))
+        radius = ((self.size_x + self.size_y) // 4) - 5
+        width = 20
+        
+        pygame.draw.circle(surface, color, center, radius, width)
+        
+    def drawRectangle(self, row, col):
+        # Draws rectangle on the board at (row, col)
+        # ------------------------------------------        
+        # row : Row on the board 
+        # col : Col on the board
+        # ------------------------------------------
+        
+        pos_x = row * (self.size_x + 5)
+        pos_y = col * (self.size_y + 5)
+        rect = pygame.Rect(pos_x, pos_y, self.size_x, self.size_y)
+        pygame.draw.rect(self.gameDisplay, self.dimgrey, rect)
+    
+    def drawX(self, row, col):
+        # Draws 'X' on the board at (row, col)
+        # ------------------------------------------        
+        # row : Row on the board 
+        # col : Col on the board
+        # ------------------------------------------
+        # aaline(surface, color, start_pos, end_pos, blend=1) -> Rect
+        surface = self.gameDisplay
+        color = self.black
+        start_pos = (row * self.size_x,(col * self.size_y))
+        end_pos = (row * self.size_x  + self.size_x, col * self.size_y + self.size_y)
+        blend = 1
+        pygame.draw.aaline(surface, color, start_pos , end_pos , blend)
+    
+    @property
+    def handlerMouse(self):
+        # Function that handles the mouse interaction
+        # -------------------------------------------
+        mouse_pos = pygame.mouse.get_pos()
+
+        print("Position = ", mouse_pos)
+    
+    def drawBoard(self):
+        # Draw the board on the screen
+        # --------------------------------
+        #
+        board = self.game.board
+        variables = self.game.variables
+        
+        #board[0][0] = 'X'
+        board[0][1] = 'O'
+        board[1][1] = 'X'
+        print(board)
+        
+        for x in range(0 , 3):
+            for y in range(0, 3):
+                # Draw Grid
+                self.drawRectangle(x, y)
+                # Draw options selected on the board
+                if(board[x][y] == variables[0]): # Variables[0] it's equal to 'X' 
+                    self.drawX(x,y)
+                elif(board[x][y] == variables[1]): # I'ts equal to 'O'
+                    self.drawCircle(x,y)
+            pygame.display.update()  # update the display          
+    
+    def __del__(self):
+        self.gameDisplay.fill(self.white) # Fill the background with the color X
+        pygame.display.update()  # To update the display
+        pygame.display.quit()
+        pygame.quit()
 
 def Console():
     def __init__(self):
@@ -175,18 +222,19 @@ def menuHandler(option):
         run = False
         return
     elif(option == 1):  # Graphical
-        print("Graphical Game Started")
         graph = Graphical()
     elif(option == 2):  # Console
-        print("Console Game Started")
         console = Console()
     else:
         print("Option invalid!")
 
 run = True
 
-while(run):
-    menu()
+Graphical()
+
+
+#while(run):
+ #   menu()
     
 # gameDisplay.fill(white) # Fill the background with the color X
 # pygame.display.update() #To update the display
