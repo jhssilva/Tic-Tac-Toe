@@ -417,43 +417,6 @@ class Graphical():
         pygame.display.quit()
         pygame.quit()
 
-def Console():
-    def __init__(self):
-        print("Here")
-
-def menu():
-    print("*** Menu Options ***")
-    print("1 - Graphical game")
-    print("2 - Console Game")
-    print("0 - Exit")
-    option = int(input("Option: "))
-
-    if(option > 2 or option < 0):
-        print("Choose a valid option")
-    else:
-        menuHandler(option)
-
-def menuHandler(option):
-    global run
-    if(option == 0):
-        run = False
-        return
-    elif(option == 1):  # Graphical
-        graph = Graphical()
-        run = False
-    elif(option == 2):  # Console
-        console = Console()
-        run = False
-    else:
-        print("Option invalid!")
-
-run = True
 
 Graphical()
 
-
-#while(run):
- #   menu()
-    
-# gameDisplay.fill(white) # Fill the background with the color X
-# pygame.display.update() #To update the display
