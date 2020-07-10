@@ -8,6 +8,7 @@
 # Pygame librarie
 import os
 import sys
+import random
 import pygame
 from pygame.locals import *
 
@@ -44,9 +45,7 @@ class Game():
     @property
     def variables(self):
         return self.__variables
-    
-    # Next turn that will be against computer
-    
+     
     def checkWin(self):
         # Function that checks if someone one
         # Returns True if someone one
@@ -112,8 +111,20 @@ class Game():
         return False
             
     # Check if there are plays available
+    @property
     def checkPlays(self):
-        print("")
+        # Function that check if there are any available plays
+        # Returns True if there is plays available
+        # Returns False if there is no play available
+        # ----------------------------------------------------
+        #
+        
+        for x in range( 0 , 3 ):
+            for y in range( 0 , 3 ):
+                if( self.__board[x][y] == None ):
+                    return True
+        
+        return False
             
     # Check if movement it's available
     def checkMovement(self, row, col):
@@ -126,7 +137,7 @@ class Game():
         # ------------------------------------------
         #
         status = False
-        if (row > 3 or row < 0 or col > 3 or col < 0):
+        if (row > 2 or row < 0 or col > 2 or col < 0):
             status = False
         else:
             if(self.__board[row][col] == None):
@@ -150,6 +161,26 @@ class Game():
             self.__board[row][col] = self.__variables[0]
             return True
 
+    # Computer Play
+    @property
+    def computerPlay(self):
+        # Function that handles the computer play
+        # --------------------------------------
+        # 
+        
+        pos = random.randint( 0 , 9 )
+        
+        row = pos // 3
+        col = pos % 3
+        
+        if( self.checkMovement( row , col ) ):
+            self.__board[row][col] = self.__variables[1]
+        else:
+            if( self.checkPlays ):
+                self.computerPlay
+            else:
+                return
+          
     @property
     def __del__(self):
         print("Finishing the game")
@@ -159,6 +190,7 @@ class Graphical():
     array_rect = [] # Array of Rectangles (To keep the data and position of them)
     gameDisplay = None  # Game Display
     run = True # Variable that keeps track if the game is running
+    font = None
     
     # Colors in RGB
     white = (255, 255, 255)
@@ -166,6 +198,7 @@ class Graphical():
     gainsboro = (220,220,220)
     dimgrey = (105,105,105)
     black = (0, 0, 0)
+    green = (0,128,0)
     
     # Dimensions
     weight = 800
@@ -190,6 +223,7 @@ class Graphical():
         self.gameDisplay = pygame.display.set_mode((self.weight,self.height)) # Set the window size
         pygame.display.set_caption("Tic-Tac-Toe") # Set title of the window
         self.gameDisplay.fill(self.gainsboro) # Fill the background with the color X
+        self.font = pygame.font.Font('freesansbold.ttf', 32) # Set font
         pygame.mouse.set_visible(True) # Function to set the mouse visible
         self.drawBoard() #Initializes the board
               
@@ -287,13 +321,26 @@ class Graphical():
                 if ( pos_x < ( ( x * self.size_x  ) + self.size_x ) ):
                     if ( pos_y < ( ( y * self.size_y ) + self.size_y ) ):
                        if ( self.game.doMovement( x , y ) ):
-                            print ( "Player moved to ( {} , {} ) successfuly ".format( x , y ) )
                             self.drawBoard()
                             
+                            # Check if there is win or playes available
                             if( self.game.checkWin() ):
-                                print( "Player On! " )
+                                self.playerWins
+                            else:
+                                if( not self.game.checkPlays ):
+                                    self.tieGame
                             
-                            # Write a function that writes for the screen
+                            # Computer plays
+                            self.game.computerPlay
+                            self.drawBoard()
+                            
+                            # Check if there is win or playes available
+                            if( self.game.checkWin() ):
+                                self.computerWins
+                            else:
+                                if( not self.game.checkPlays ):
+                                    self.tieGame
+                        
                        else:
                             print ( "Position it's already fill!" )
                             
@@ -318,7 +365,53 @@ class Graphical():
                     self.drawCircle(x,y)
             pygame.display.update()  # update the display          
     
+    def setBackgroundColor(self, color):
+        # Function that sets the background of the display
+        # ------------------------------------------------
+        #
+        
+        self.gameDisplay.fill(color) # Fill the background with the color X
+        
+    def writeMSG_Center_Display(self, msg, color):
+        text = self.font.render(msg, True, color, self.black) 
+        textRect = text.get_rect() 
+        textRect.center = (self.weight // 2, self.height // 2)
+        self.gameDisplay.blit(text, textRect)
+    
+    @property
+    def updateDisplay(self):
+        pygame.display.update()  # To update the display
+        
+    @property
+    def playerWins(self):
+        print( "Player Won! " )
+        pygame.time.wait(1000)
+        self.setBackgroundColor(self.green)
+        self.writeMSG_Center_Display("WINNNNNNNERRRR", self.green)
+        self.updateDisplay
+        self.__del__
+    
+    @property
+    def computerWins(self):
+        print( "Computer Won!" )
+        pygame.time.wait(1000)
+        self.setBackgroundColor(self.red)
+        self.writeMSG_Center_Display("LOSEEERRR :( Don't Worry Next time you win!", self.red)
+        self.updateDisplay
+        self.__del__
+        
+    @property
+    def tieGame(self):
+        print( "Tie Game!" )
+        pygame.time.wait(1000)
+        self.setBackgroundColor(self.gainsboro)
+        self.writeMSG_Center_Display("TIE GAME! We can still be friends :D", self.gainsboro)
+        self.updateDisplay
+        self.__del__
+        
+    @property
     def __del__(self):
+        pygame.time.wait(2000)
         self.gameDisplay.fill(self.white) # Fill the background with the color X
         pygame.display.update()  # To update the display
         pygame.display.quit()
@@ -326,7 +419,7 @@ class Graphical():
 
 def Console():
     def __init__(self):
-        print("Aqui")
+        print("Here")
 
 def menu():
     print("*** Menu Options ***")
@@ -341,14 +434,16 @@ def menu():
         menuHandler(option)
 
 def menuHandler(option):
+    global run
     if(option == 0):
-        global run
         run = False
         return
     elif(option == 1):  # Graphical
         graph = Graphical()
+        run = False
     elif(option == 2):  # Console
         console = Console()
+        run = False
     else:
         print("Option invalid!")
 
