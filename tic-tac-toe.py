@@ -26,6 +26,7 @@ class Game():
     # Computer is the 'O' 
     # Human is the 'X'
     __variables = ["X","O"]
+    __winner = None 
 
     def __init__(self):
         super().__init__()
@@ -33,7 +34,16 @@ class Game():
         self.__board = [[None, None, None],
                     [None, None, None],
                     [None, None, None]]
+        self.__winner = None
         
+    @property
+    def winner(self):
+        return self.__winner
+    
+    @winner.setter
+    def winner(self, winner):
+        self.__winner = winner
+    
     @property
     def board(self):
         return self.__board
@@ -56,8 +66,8 @@ class Game():
         
         #  Diagonals
         counter_0 = 0 # Counter for Main Diagonal, ('X')
-        counter_01 = 0 # Counter for Main Diagonal, ('O')
-        counter_1 = 0 # Counter for Secondary Diagonal, ('X') 
+        counter_01 = 0 # Counter for Secondary Diagonal, ('X') 
+        counter_1 = 0 # Counter for Main Diagonal, ('O') 
         counter_11 = 0 # Counter for Secondary Diagonal, ('O')
             
         aux = 2
@@ -66,8 +76,9 @@ class Game():
             
             #  Rows and Columns
             count_0 = 0 # counter for row , ('X')
-            count_1 = 0 # counter for row , ('O')
             count_01 = 0 # counter for col , ('X')
+            
+            count_1 = 0 # counter for row , ('O')
             count_11 = 0 # counter for col , ('O')
             
             
@@ -86,7 +97,11 @@ class Game():
                     count_11 += 1
                     
             # Verification
-            if( count_0 == 3 or count_1 == 3 or count_01 == 3 or count_11 == 3): 
+            if( count_0 == 3 or count_01 == 3 ): 
+                self.winner = self.__variables[0]
+                return True
+            elif( count_1 == 3 or count_11 == 3 ):
+                self.winner = self.__variables[1]
                 return True
             
             # Check Diagonals
@@ -103,7 +118,11 @@ class Game():
                 counter_11 += 1
             
             # Verification
-            if( counter_0 == 3 or counter_01 == 3 or counter_1 == 3 or counter_11 == 3 ):
+            if( counter_0 == 3 or counter_01 == 3 ):
+                self.winner = self.__variables[0]
+                return True
+            elif( counter_1 == 3 or counter_11 == 3 ):
+                self.winner = self.__variables[1]
                 return True
             
             aux -= 1
@@ -124,7 +143,10 @@ class Game():
                 if( self.__board[x][y] == None ):
                     return True
         
+        self.winner = '-'
         return False
+    
+    
             
     # Check if movement it's available
     def checkMovement(self, row, col):
@@ -168,6 +190,14 @@ class Game():
         # --------------------------------------
         # 
         
+        #self.randomPlay() # RandomPlay
+        self.aiPlay()
+    
+    def randomPlay(self):
+        # Computer Random Play
+        # --------------------------------------
+        #
+        
         pos = random.randint( 0 , 9 )
         
         row = pos // 3
@@ -180,7 +210,73 @@ class Game():
                 self.computerPlay
             else:
                 return
-          
+    
+    def aiPlay(self):
+        # AI Play
+        bestScore = -1000
+        pos_x = 0
+        pos_y = 0
+        
+        for x in range( 0 , 3 ):
+            for y in range ( 0 , 3 ):
+                if( self.checkMovement( x , y ) ):
+                    self.__board[x][y] = self.__variables[1]
+                    score = self.minimax(0, False)
+                    self.__board[x][y] = None
+                    
+                    if ( score > bestScore ):
+                        bestScore = score
+                        pos_x = x
+                        pos_y = y
+        
+        self.__board[pos_x][pos_y] = self.__variables[1]
+                    
+        
+    
+    def minimax( self, depth, isMaximizing ):
+        # Function of the minimax algorith        
+        # Verify if there is a winner ( With checking wich one is the winer
+        # 
+        
+        if ( self.checkWin() ):
+            if( self.__winner == self.__variables[0] ): # Human wins
+                return -10
+            elif( self.__winner == self.__variables[1] ): # Ai wins
+                return 10
+        elif( not self.checkPlays ): # Tie
+                return 0
+            
+        if( isMaximizing ):
+            bestScore = -1000
+            for i in range( 0 , 3 ):
+                for j in range( 0 , 3 ):
+                    if( self.checkMovement( i , j ) ):
+                        self.__board[i][j] = self.__variables[1] # AI
+                        score = self.minimax( depth + 1 , False )
+                        self.__board[i][j] = None
+                        
+                        if( score > bestScore ):
+                            bestScore = score
+            return bestScore
+        else:
+                bestScore = 1000
+                for i in range ( 0 , 3 ):
+                    for j in range ( 0 , 3 ):
+                        if ( self.checkMovement( i , j ) ):
+                            self.__board[i][j] = self.__variables[0] # Human
+                            score = self.minimax( depth + 1 , True )
+                            self.__board[i][j] = None
+                            
+                            if ( score < bestScore ):
+                                bestScore = score
+                                
+                return bestScore
+                
+        
+        
+        
+    
+    
     @property
     def __del__(self):
         print("Finishing the game")
@@ -411,12 +507,17 @@ class Graphical():
         
     @property
     def __del__(self):
-        pygame.time.wait(2000)
+        pygame.time.wait(1000)
         self.gameDisplay.fill(self.white) # Fill the background with the color X
         pygame.display.update()  # To update the display
-        pygame.display.quit()
-        pygame.quit()
 
+        if(self.run):
+            self.game = Game()
+            self.initBoard
+            self.start
+        else:  
+            pygame.display.quit()
+            pygame.quit()
+            sys.exit()
 
 Graphical()
-
