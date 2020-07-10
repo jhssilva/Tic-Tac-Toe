@@ -27,6 +27,7 @@ class Game():
     # Human is the 'X'
     __variables = ["X","O"]
     __winner = None 
+    __modo = 1
 
     def __init__(self):
         super().__init__()
@@ -35,7 +36,17 @@ class Game():
                     [None, None, None],
                     [None, None, None]]
         self.__winner = None
-        
+        self.__modo = random.randint(0,2)
+        self.showConsoleMode
+          
+    @property
+    def modo(self):
+        return self.__modo
+    
+    @modo.setter
+    def modo(self, modo):
+        self.__modo = modo
+    
     @property
     def winner(self):
         return self.__winner
@@ -55,6 +66,15 @@ class Game():
     @property
     def variables(self):
         return self.__variables
+    
+    @property
+    def showConsoleMode(self):
+        if ( self.modo == 0 ):
+            print("Running with random play")
+        elif( self.modo == 1 ):
+            print("Running with minimax algorithm")
+        else:
+            print("Running with minimax Alpha beta prunning algorith")
      
     def checkWin(self):
         # Function that checks if someone one
@@ -146,8 +166,6 @@ class Game():
         self.winner = '-'
         return False
     
-    
-            
     # Check if movement it's available
     def checkMovement(self, row, col):
         # function that checks movement of the player on the board
@@ -190,8 +208,12 @@ class Game():
         # --------------------------------------
         # 
         
-        #self.randomPlay() # RandomPlay
-        self.aiPlay()
+        if( self.modo == 0 ):
+            self.randomPlay() # RandomPlay
+        elif ( self.modo == 1 ):
+            self.aiPlayWithMiniMax()
+        elif ( self.modo == 2 ):
+            self.aiPlayWithAlphaBeta()
     
     def randomPlay(self):
         # Computer Random Play
@@ -211,7 +233,64 @@ class Game():
             else:
                 return
     
-    def aiPlay(self):
+    def aiPlayWithAlphaBeta(self):
+        bestScore = -1000
+        pos_x = 0
+        pos_y = 0
+        for i in range ( 0 , 3 ):
+            for j in range ( 0 , 3 ):
+                if ( self.checkMovement( i , j ) ):
+                    self.__board[i][j] = self.__variables[1]
+                    val = self.minimaxAlphaBeta( 9 , -1000, 1000, False ) # The depth it's not what i'm using for guidance
+                    self.__board[i][j] = None
+
+                    if val > bestScore:
+                        pos_x = i
+                        pos_y = j
+                        bestScore = val
+        
+        self.__board[pos_x][pos_y] = self.__variables[1]
+                        
+    def minimaxAlphaBeta( self , depth ,  alpha , beta , maximizingPlayer ):
+        if ( self.checkWin() ):
+            if ( self.__winner == self.__variables[0] ): # Human wins
+                return -10
+            elif ( self.__winner == self.__variables[1] ): # Computer wins
+                return 10
+        elif( not self.checkPlays ): # Tie
+            return 0
+        elif ( depth == 0 ):
+            return 0
+        
+        if ( maximizingPlayer ): # Turn of the ai to play
+            maxEval = -1000
+            for i in range ( 0 , 3 ):
+                for j in range ( 0 , 3 ):
+                    if self.checkMovement( i , j):
+                        self.__board[i][j] = self.__variables[1]
+                        eval = self.minimaxAlphaBeta( depth - 1 , alpha ,  beta , False )
+                        self.__board[i][j] = None
+                        maxEval = max(maxEval, eval)
+                        alpha = max(alpha, eval)
+                        if beta <= alpha:
+                            break
+                    
+            return maxEval
+        else:
+            minEval = 1000
+            for i in range ( 0 , 3 ):
+                for j in range ( 0 , 3 ):
+                    if ( self.checkMovement( i , j ) ):
+                        self.__board[i][j] = self.__variables[0]
+                        eval = self.minimaxAlphaBeta( depth - 1 , alpha ,  beta , True )
+                        self.__board[i][j] = None
+                        minEval = min(minEval, eval)
+                        beta = min( beta , eval )
+                        if beta <= alpha:
+                            break
+            return minEval
+    
+    def aiPlayWithMiniMax(self):
         # AI Play
         bestScore = -1000
         pos_x = 0
@@ -230,9 +309,7 @@ class Game():
                         pos_y = y
         
         self.__board[pos_x][pos_y] = self.__variables[1]
-                    
-        
-    
+                      
     def minimax( self, depth, isMaximizing ):
         # Function of the minimax algorith        
         # Verify if there is a winner ( With checking wich one is the winer
@@ -271,12 +348,7 @@ class Game():
                                 bestScore = score
                                 
                 return bestScore
-                
-        
-        
-        
-    
-    
+         
     @property
     def __del__(self):
         print("Finishing the game")
