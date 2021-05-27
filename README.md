@@ -15,3 +15,5 @@ To spice a litle bit, i'm implementing some algorithms.
 - Tradition game Tic-Tac-Toe that you can play against the computer. The computer uses Algorithms 
 such Minimax and Alpha-beta pruning to play.
 - Utilized: Python, Pygame and Algorithms (Minimax, Alpha-beta pruning)
+
+![image](https://user-images.githubusercontent.com/24280639/119857502-87dec080-bf0b-11eb-866b-abfebb8a5773.png)
